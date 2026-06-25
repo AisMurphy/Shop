@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Irish Shop of Kennebunkport</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Square Web Payments SDK — replace YOUR_APP_ID in the script below -->
+  <script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-deep: #1B5E20;
+      --green-mid: #2E7D32;
+      --green-light: #388E3C;
+      --gold: #C9A84C;
+      --gold-light: #E2C26E;
+      --cream: #FAF7F0;
+      --cream-dark: #F0EBE0;
+      --charcoal: #1C1C1C;
+      --white: #ffffff;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--charcoal); }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--green-deep);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      border-bottom: 3px solid var(--gold);
+      gap: 1rem;
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+    .nav-logo span { display: block; color: var(--white); font-size: 0.65rem; font-family: 'Inter', sans-serif; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; flex-shrink: 0; }
+    .nav-links a { color: var(--cream); text-decoration: none; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--gold); }
+
+    /* Search bar */
+    .nav-search {
+      flex: 1;
+      max-width: 360px;
+      position: relative;
+    }
+    .nav-search input {
+      width: 100%;
+      padding: 0.42rem 2.2rem 0.42rem 0.9rem;
+      border-radius: 2px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.1);
+      color: var(--white);
+      font-size: 0.82rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .nav-search input::placeholder { color: rgba(255,255,255,0.5); }
+    .nav-search input:focus { outline: none; border-color: var(--gold); background: rgba(255,255,255,0.18); }
+    .nav-search .search-icon {
+      position: absolute;
+      right: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+    /* Search results dropdown */
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border: 1px solid #e0d9ce;
+      border-radius: 3px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      z-index: 300;
+      max-height: 340px;
+      overflow-y: auto;
+      display: none;
+    }
+    .search-dropdown.open { display: block; }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f0ebe0;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: var(--cream); }
+    .sri-emoji { font-size: 1.6rem; width: 2.2rem; text-align: center; flex-shrink: 0; }
+    .sri-info { flex: 1; }
+    .sri-name { font-size: 0.85rem; font-weight: 600; color: var(--charcoal); }
+    .sri-cat { font-size: 0.72rem; color: var(--green-light); letter-spacing: 0.05em; }
+    .sri-price { font-size: 0.88rem; font-weight: 700; color: var(--green-deep); flex-shrink: 0; }
+    .search-no-results { padding: 1rem; text-align: center; color: #888; font-size: 0.85rem; }
+
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+    .nav-cart-btn {
+      background: var(--gold);
+      color: var(--green-deep);
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 2px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .nav-cart-btn:hover { background: var(--gold-light); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 560px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      background: var(--green-deep);
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, #2E7D3288 0%, transparent 60%),
+                  linear-gradient(135deg, #1B5E20 0%, #0d3311 100%);
+    }
+    .hero-pattern {
+      position: absolute; right: -40px; top: 50%; transform: translateY(-50%);
+      width: 480px; height: 480px; opacity: 0.08;
+    }
+    .hero-content { position: relative; z-index: 2; padding: 4rem 2rem 4rem 6vw; max-width: 680px; }
+    .hero-eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2.4rem, 5.5vw, 4.2rem); color: var(--white); line-height: 1.08; font-weight: 900; margin-bottom: 1.1rem; }
+    .hero-title em { color: var(--gold); font-style: italic; }
+    .hero-sub { font-size: 1rem; color: #c8e6c9; line-height: 1.65; max-width: 480px; margin-bottom: 2rem; font-weight: 300; }
+    .hero-cta { display: inline-flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary { background: var(--gold); color: var(--green-deep); border: none; padding: 0.85rem 2rem; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s, transform 0.15s; text-decoration: none; display: inline-block; }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+    .btn-secondary { background: transparent; color: var(--white); border: 2px solid rgba(255,255,255,0.4); padding: 0.85rem 2rem; font-size: 0.88rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: border-color 0.2s, color 0.2s; text-decoration: none; display: inline-block; }
+    .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── TRUST BANNER ── */
+    .trust-banner { background: var(--green-mid); border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); display: flex; justify-content: center; gap: 2.5rem; padding: 0.8rem 2rem; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 0.5rem; color: var(--cream); font-size: 0.78rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+    .trust-item .icon { font-size: 1rem; }
+
+    /* ── SECTION SHELL ── */
+    section { padding: 4rem 2rem; }
+    .section-header { text-align: center; margin-bottom: 2.5rem; }
+    .section-eyebrow { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.4rem); color: var(--green-deep); font-weight: 900; line-height: 1.15; }
+
+    /* ── CATEGORIES ── */
+    .categories { background: var(--cream-dark); }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; max-width: 1100px; margin: 0 auto; }
+    .cat-card { position: relative; height: 210px; border-radius: 3px; overflow: hidden; cursor: pointer; display: flex; align-items: flex-end; }
+    .cat-bg { position: absolute; inset: 0; transition: transform 0.4s ease; }
+    .cat-card:hover .cat-bg { transform: scale(1.06); }
+    .cat-card:nth-child(1) .cat-bg { background: linear-gradient(135deg,#1B5E20,#2d8a35); }
+    .cat-card:nth-child(2) .cat-bg { background: linear-gradient(135deg,#4E342E,#795548); }
+    .cat-card:nth-child(3) .cat-bg { background: linear-gradient(135deg,#1A237E,#283593); }
+    .cat-card:nth-child(4) .cat-bg { background: linear-gradient(135deg,#880E4F,#AD1457); }
+    .cat-card:nth-child(5) .cat-bg { background: linear-gradient(135deg,#E65100,#F57C00); }
+    .cat-emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-62%); font-size: 3.2rem; opacity: 0.3; }
+    .cat-label { position: relative; z-index: 2; width: 100%; background: linear-gradient(transparent,rgba(0,0,0,0.7)); padding: 1.5rem 1rem 1rem; color: var(--white); }
+    .cat-label strong { font-family: 'Playfair Display', serif; font-size: 1rem; display: block; }
+    .cat-label span { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-light); }
+
+    /* ── PRODUCTS ── */
+    .products { background: var(--cream); }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .no-results { grid-column: 1/-1; text-align: center; padding: 3rem; color: #888; font-size: 1rem; }
+    .product-card { background: var(--white); border: 1px solid #e0d9ce; border-radius: 3px; overflow: hidden; transition: box-shadow 0.25s, transform 0.2s; cursor: pointer; }
+    .product-card:hover { box-shadow: 0 8px 32px rgba(27,94,32,0.13); transform: translateY(-4px); }
+    .product-img { height: 210px; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden; }
+    .product-badge { position: absolute; top: 0.75rem; left: 0.75rem; background: var(--gold); color: var(--green-deep); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 1px; }
+    .product-body { padding: 1rem 1.1rem 1.2rem; }
+    .product-category { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.3rem; }
+    .product-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--charcoal); margin-bottom: 0.3rem; line-height: 1.3; }
+    .product-desc { font-size: 0.78rem; color: #666; line-height: 1.5; margin-bottom: 0.85rem; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-size: 1.1rem; font-weight: 700; color: var(--green-deep); }
+    .product-price .was { font-size: 0.76rem; color: #999; text-decoration: line-through; font-weight: 400; margin-left: 0.3rem; }
+    .btn-add { background: var(--green-deep); color: var(--white); border: none; padding: 0.48rem 0.9rem; font-size: 0.76rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
+    .btn-add:hover { background: var(--green-light); }
+
+    /* ── PRODUCT DETAIL MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white); border-radius: 4px; max-width: 720px; width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.3); overflow: hidden;
+      transform: translateY(24px); transition: transform 0.25s;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-inner { display: grid; grid-template-columns: 1fr 1fr; }
+    .modal-img { height: 360px; display: flex; align-items: center; justify-content: center; font-size: 6rem; position: relative; }
+    .modal-badge { position: absolute; top: 1rem; left: 1rem; background: var(--gold); color: var(--green-deep); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 1px; }
+    .modal-body { padding: 2rem 2rem 2rem; display: flex; flex-direction: column; }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: white; border: none; width: 2rem; height: 2rem; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10; }
+    .modal-close:hover { background: rgba(0,0,0,0.8); }
+    .modal .product-category { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.4rem; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; color: var(--charcoal); margin-bottom: 0.5rem; line-height: 1.25; }
+    .modal-price { font-size: 1.5rem; font-weight: 700; color: var(--green-deep); margin-bottom: 1rem; }
+    .modal-price .was { font-size: 0.9rem; color: #999; text-decoration: line-through; font-weight: 400; margin-left: 0.4rem; }
+    .modal-desc { font-size: 0.9rem; color: #555; line-height: 1.7; margin-bottom: 1.25rem; flex: 1; }
+    .modal-details { font-size: 0.78rem; color: #777; margin-bottom: 1.5rem; line-height: 1.8; }
+    .modal-details strong { color: var(--charcoal); }
+    .modal-qty { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .modal-qty label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #555; }
+    .qty-ctrl { display: flex; align-items: center; border: 1.5px solid #d0c9be; border-radius: 2px; overflow: hidden; }
+    .qty-ctrl button { background: var(--cream-dark); border: none; width: 2rem; height: 2rem; font-size: 1rem; cursor: pointer; transition: background 0.15s; }
+    .qty-ctrl button:hover { background: #e0d9ce; }
+    .qty-ctrl span { width: 2.5rem; text-align: center; font-size: 0.9rem; font-weight: 600; }
+    .modal-actions { display: flex; gap: 0.75rem; }
+    .btn-modal-add { flex: 1; background: var(--green-deep); color: var(--white); border: none; padding: 0.85rem; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
+    .btn-modal-add:hover { background: var(--green-light); }
+    .btn-modal-buy { flex: 1; background: var(--gold); color: var(--green-deep); border: none; padding: 0.85rem; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
+    .btn-modal-buy:hover { background: var(--gold-light); }
+    @media (max-width: 580px) {
+      .modal-inner { grid-template-columns: 1fr; }
+      .modal-img { height: 220px; }
+    }
+
+    /* ── CART DRAWER ── */
+    .cart-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 400;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .cart-overlay.open { opacity: 1; pointer-events: all; }
+    .cart-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 100vw;
+      background: var(--white); z-index: 401; box-shadow: -8px 0 40px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.3s ease;
+    }
+    .cart-overlay.open .cart-drawer { transform: translateX(0); }
+    .cart-header {
+      background: var(--green-deep); color: var(--white);
+      padding: 1.1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 3px solid var(--gold);
+    }
+    .cart-header h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
+    .cart-close { background: none; border: none; color: var(--white); font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0.2rem; }
+    .cart-items { flex: 1; overflow-y: auto; padding: 1rem; }
+    .cart-empty { text-align: center; padding: 3rem 1.5rem; color: #888; }
+    .cart-empty .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .cart-empty p { font-size: 0.9rem; line-height: 1.6; }
+    .cart-item { display: flex; gap: 0.85rem; padding: 0.85rem 0; border-bottom: 1px solid #f0ebe0; align-items: flex-start; }
+    .ci-emoji { font-size: 2.2rem; width: 3rem; text-align: center; flex-shrink: 0; background: var(--cream); border-radius: 2px; padding: 0.35rem; }
+    .ci-info { flex: 1; }
+    .ci-name { font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 700; color: var(--charcoal); margin-bottom: 0.2rem; }
+    .ci-price { font-size: 0.82rem; color: var(--green-deep); font-weight: 600; margin-bottom: 0.4rem; }
+    .ci-qty { display: flex; align-items: center; gap: 0.5rem; }
+    .ci-qty button { background: var(--cream-dark); border: 1px solid #d0c9be; width: 1.6rem; height: 1.6rem; border-radius: 2px; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; }
+    .ci-qty button:hover { background: #d9d1c7; }
+    .ci-qty span { font-size: 0.85rem; font-weight: 600; min-width: 1.2rem; text-align: center; }
+    .ci-remove { background: none; border: none; color: #bbb; font-size: 1.1rem; cursor: pointer; padding: 0.2rem; transition: color 0.15s; flex-shrink: 0; margin-top: 0.1rem; }
+    .ci-remove:hover { color: #e53935; }
+    .cart-footer { padding: 1.25rem 1.5rem; border-top: 1px solid #e0d9ce; background: var(--cream); }
+    .cart-subtotal { display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.4rem; color: #555; }
+    .cart-total { display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 700; color: var(--green-deep); margin-bottom: 1.25rem; padding-top: 0.5rem; border-top: 1px solid #d9d1c7; }
+    .btn-checkout {
+      width: 100%; background: var(--green-deep); color: var(--white); border: none;
+      padding: 1rem; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; margin-bottom: 0.6rem;
+    }
+    .btn-checkout:hover { background: var(--green-light); }
+    .square-note { font-size: 0.7rem; color: #888; text-align: center; line-height: 1.5; }
+    /* Square payment form inside cart */
+    #square-payment-form { margin-top: 1rem; display: none; }
+    #square-payment-form.visible { display: block; }
+    #card-container { margin-bottom: 0.75rem; }
+    #payment-status { font-size: 0.8rem; color: var(--green-deep); text-align: center; margin-top: 0.5rem; min-height: 1.2rem; }
+
+    /* ── HERITAGE ── */
+    .heritage { background: var(--green-deep); color: var(--white); text-align: center; padding: 5rem 2rem; position: relative; overflow: hidden; }
+    .heritage::before { content: '☘'; position: absolute; font-size: 28rem; opacity: 0.04; top: 50%; left: 50%; transform: translate(-50%,-50%); line-height: 1; }
+    .heritage-inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+    .heritage-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem,4vw,2.7rem); font-weight: 900; margin-bottom: 1rem; line-height: 1.15; }
+    .heritage-title em { color: var(--gold); font-style: italic; }
+    .heritage-text { font-size: 1rem; color: #c8e6c9; line-height: 1.75; margin-bottom: 2rem; font-weight: 300; }
+    .heritage-flags { display: flex; justify-content: center; gap: 2rem; font-size: 2.5rem; margin-bottom: 2rem; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: var(--cream-dark); }
+    .testi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 1.25rem; max-width: 1000px; margin: 0 auto; }
+    .testi-card { background: var(--white); border: 1px solid #e0d9ce; border-left: 4px solid var(--gold); padding: 1.5rem; border-radius: 2px; }
+    .testi-stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .testi-text { font-size: 0.88rem; line-height: 1.65; color: #444; font-style: italic; margin-bottom: 1rem; }
+    .testi-author { font-size: 0.78rem; font-weight: 600; color: var(--green-deep); letter-spacing: 0.05em; }
+    .testi-location { font-size: 0.72rem; color: #888; }
+
+    /* ── NEWSLETTER ── */
+    .newsletter { background: var(--gold); padding: 3.5rem 2rem; text-align: center; }
+    .newsletter-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 900; color: var(--green-deep); margin-bottom: 0.5rem; }
+    .newsletter-sub { font-size: 0.88rem; color: #5a3e00; margin-bottom: 1.5rem; }
+    .newsletter-form { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+    .newsletter-form input { padding: 0.75rem 1.25rem; font-size: 0.88rem; border: 2px solid var(--green-deep); border-radius: 2px; width: 300px; background: var(--white); color: var(--charcoal); font-family: 'Inter', sans-serif; }
+    .newsletter-form input:focus { outline: none; }
+    .newsletter-form button { background: var(--green-deep); color: var(--white); border: none; padding: 0.75rem 1.75rem; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
+    .newsletter-form button:hover { background: var(--green-light); }
+
+    /* ── FOOTER ── */
+    footer { background: #0d1f0e; color: #a5c8a7; padding: 3rem 2rem 1.5rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; max-width: 1100px; margin: 0 auto 2rem; }
+    .footer-brand .logo-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); font-weight: 700; margin-bottom: 0.75rem; }
+    .footer-brand p { font-size: 0.8rem; line-height: 1.7; color: #7ea880; }
+    .footer-col h4 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 0.5rem; }
+    .footer-col ul a { color: #7ea880; text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
+    .footer-col ul a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid #1e3a20; padding-top: 1.25rem; text-align: center; font-size: 0.72rem; color: #4a6b4c; max-width: 1100px; margin: 0 auto; }
+    .footer-bottom .shamrock { color: var(--gold); }
+
+    /* ── TOAST ── */
+    .cart-toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--green-deep); color: var(--white); border-left: 4px solid var(--gold); padding: 0.9rem 1.4rem; border-radius: 3px; font-size: 0.85rem; box-shadow: 0 8px 32px rgba(0,0,0,0.25); transform: translateY(120px); opacity: 0; transition: all 0.3s ease; z-index: 999; }
+    .cart-toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-search { max-width: 200px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .trust-banner { gap: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .nav-search { max-width: 140px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">The Irish Shop<span>of Kennebunkport</span></div>
+  <ul class="nav-links">
+    <li><a href="#categories">Shop</a></li>
+    <li><a href="#featured">Featured</a></li>
+    <li><a href="#heritage">Our Story</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="nav-search">
+    <input type="text" id="searchInput" placeholder="Search products…" autocomplete="off" />
+    <span class="search-icon">🔍</span>
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+  <div class="nav-right">
+    <button class="nav-cart-btn" id="cartBtn">🛒 Cart (<span id="cartCount">0</span>)</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <svg class="hero-pattern" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="white" stroke-width="1.2">
+      <circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="50"/>
+      <line x1="10" y1="100" x2="190" y2="100"/><line x1="100" y1="10" x2="100" y2="190"/>
+      <line x1="27" y1="27" x2="173" y2="173"/><line x1="173" y1="27" x2="27" y2="173"/>
+      <path d="M100,10 Q150,55 190,100 Q150,145 100,190 Q50,145 10,100 Q50,55 100,10Z"/>
+    </g>
+  </svg>
+  <div class="hero-content">
+    <p class="hero-eyebrow">☘ Kennebunkport, Maine · Est. 2015</p>
+    <h1 class="hero-title">Straight from the<br/><em>Emerald Isle</em><br/>to Your Door</h1>
+    <p class="hero-sub">Authentic Irish knitwear, fine foods, heraldic keepsakes, and handcrafted gifts — curated with love for the Celtic Diaspora of New England.</p>
+    <div class="hero-cta">
+      <a href="#featured" class="btn-primary">Shop Now</a>
+      <a href="#categories" class="btn-secondary">Browse Categories</a>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BANNER -->
+<div class="trust-banner">
+  <div class="trust-item"><span class="icon">🇮🇪</span> Authentic Irish Goods</div>
+  <div class="trust-item"><span class="icon">📦</span> Free Shipping Over $75</div>
+  <div class="trust-item"><span class="icon">↩️</span> 30-Day Returns</div>
+  <div class="trust-item"><span class="icon">🏡</span> Family-Owned in Kennebunkport</div>
+  <div class="trust-item"><span class="icon">⭐</span> 4.9 / 5 Rating</div>
+</div>
+
+<!-- CATEGORIES -->
+<section class="categories" id="categories">
+  <div class="section-header">
+    <p class="section-eyebrow">☘ What We Carry</p>
+    <h2 class="section-title">Shop by Category</h2>
+  </div>
+  <div class="cat-grid">
+    <div class="cat-card" onclick="filterByCategory('Clothing & Knitwear')">
+      <div class="cat-bg"></div><div class="cat-emoji">🧥</div>
+      <div class="cat-label"><strong>Clothing & Knitwear</strong><span>Aran sweaters · Caps · Scarves</span></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('Food & Drink')">
+      <div class="cat-bg"></div><div class="cat-emoji">🍵</div>
+      <div class="cat-label"><strong>Food & Drink</strong><span>Tea · Biscuits · Whiskey Cake</span></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('Gifts & Collectibles')">
+      <div class="cat-bg"></div><div class="cat-emoji">🎁</div>
+      <div class="cat-label"><strong>Gifts & Collectibles</strong><span>Pottery · Candles · Figures</span></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('Jewelry')">
+      <div class="cat-bg"></div><div class="cat-emoji">💍</div>
+      <div class="cat-label"><strong>Jewelry & Accessories</strong><span>Claddagh · Celtic rings · Pendants</span></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('Heraldic Souvenirs')">
+      <div class="cat-bg"></div><div class="cat-emoji">🏰</div>
+      <div class="cat-label"><strong>Heraldic Souvenirs</strong><span>Family crests · Clan plaques · Shields</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PRODUCTS -->
+<section class="products" id="featured">
+  <div class="section-header">
+    <p class="section-eyebrow" id="productsEyebrow">☘ Handpicked</p>
+    <h2 class="section-title" id="productsTitle">Featured Products</h2>
+  </div>
+  <div class="product-grid" id="productGrid"></div>
+</section>
+
+<!-- HERITAGE BAND -->
+<section class="heritage" id="heritage">
+  <div class="heritage-inner">
+    <div class="heritage-flags">🇮🇪 ☘ 🇺🇸</div>
+    <h2 class="heritage-title">Born in Ireland,<br/><em>at Home in Maine</em></h2>
+    <p class="heritage-text">We source every item directly from Irish makers, cooperatives, and family workshops — ensuring that when you buy from us, your money supports the craftspeople and farmers who keep Irish traditions alive.</p>
+    <a href="#" class="btn-primary">Read Our Story</a>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="section-header">
+    <p class="section-eyebrow">☘ Customer Love</p>
+    <h2 class="section-title">What Our Customers Say</h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"The Aran sweater arrived beautifully packaged. You can feel the quality the moment you take it out of the box — wearing it feels like wrapping yourself in Ireland."</p>
+      <div class="testi-author">Brigid M.</div><div class="testi-location">Portsmouth, NH</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"I ordered a family crest plaque for my father — he was moved to tears. Remarkable quality, arrived quickly. Will absolutely be a repeat customer."</p>
+      <div class="testi-author">Patrick O'S.</div><div class="testi-location">Kennebunkport, ME</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"Finally, a proper Irish shop close to home. The Claddagh ring is gorgeous and came with a card about its history. The personal touch makes all the difference."</p>
+      <div class="testi-author">Siobhan T.</div><div class="testi-location">Biddeford, ME</div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter">
+  <h2 class="newsletter-title">Join the Irish Community</h2>
+  <p class="newsletter-sub">New arrivals, seasonal sales, and a wee bit of Irish news — straight to your inbox.</p>
+  <div class="newsletter-form">
+    <input type="email" placeholder="your@email.com" />
+    <button onclick="showToast('Thanks! You\'re on the list. ☘')">Subscribe</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo-text">The Irish Shop of Kennebunkport</div>
+      <p>Celebrating Irish heritage along the Maine coast. Authentic goods, real stories, and a community of Irish hearts far from home.</p>
+    </div>
+    <div class="footer-col"><h4>Shop</h4><ul>
+      <li><a href="#">Clothing & Knitwear</a></li><li><a href="#">Food & Drink</a></li>
+      <li><a href="#">Gifts & Collectibles</a></li><li><a href="#">Jewelry</a></li>
+      <li><a href="#">Heraldic Souvenirs</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Help</h4><ul>
+      <li><a href="#">Shipping Info</a></li><li><a href="#">Returns</a></li>
+      <li><a href="#">Size Guides</a></li><li><a href="#">FAQ</a></li><li><a href="#">Contact Us</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>About</h4><ul>
+      <li><a href="#">Our Story</a></li><li><a href="#">Irish Makers</a></li>
+      <li><a href="#">Blog</a></li><li><a href="#">Gift Cards</a></li><li><a href="#">Wholesale</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom"><span class="shamrock">☘</span> © 2015 The Irish Shop of Kennebunkport · All rights reserved</div>
+</footer>
+
+<!-- PRODUCT DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-inner">
+      <div class="modal-img" id="modalImg"></div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCartOnOverlay(event)">
+  <div class="cart-drawer">
+    <div class="cart-header">
+      <h3>☘ Your Cart</h3>
+      <button class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-subtotal"><span>Subtotal</span><span id="cartSubtotal">$0.00</span></div>
+      <div class="cart-subtotal"><span>Shipping</span><span id="cartShipping">Free</span></div>
+      <div class="cart-total"><span>Total</span><span id="cartTotal">$0.00</span></div>
+      <button class="btn-checkout" id="checkoutBtn" onclick="initSquareCheckout()">Proceed to Checkout</button>
+      <div id="square-payment-form">
+        <div id="card-container"></div>
+        <button class="btn-checkout" id="payBtn" style="background:var(--gold);color:var(--green-deep)" onclick="handlePayment()">Pay Now</button>
+        <div id="payment-status"></div>
+      </div>
+      <p class="square-note">🔒 Secured by Square · Cards accepted: Visa, MC, Amex, Discover</p>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="cart-toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+const products = [
+  { id:1, name:"Merino Aran Sweater", category:"Clothing & Knitwear", price:129, was:159, emoji:"🧥", bg:"#e8f5e9", badge:"Bestseller",
+    desc:"Hand-knit in County Galway using 100% Irish merino wool. Warm, timeless, and built to last generations.",
+    details:{ Origin:"County Galway, Ireland", Material:"100% Irish Merino Wool", Care:"Hand wash cold", Sizes:"XS–3XL" }},
+  { id:2, name:"Claddagh Ring — Sterling", category:"Jewelry", price:69, was:null, emoji:"💍", bg:"#ede7f6", badge:"New In",
+    desc:"Classic Claddagh design in sterling silver. Crafted in Galway, the home of the Claddagh tradition.",
+    details:{ Origin:"Galway City, Ireland", Material:"925 Sterling Silver", Sizing:"US sizes 4–12", Hallmark:"Irish Assay Office" }},
+  { id:3, name:"County Clare Family Crest", category:"Heraldic Souvenirs", price:95, was:110, emoji:"🏰", bg:"#fff3e0", badge:"Popular",
+    desc:"Custom hand-painted family crest plaque. Specify your surname and we'll trace your Irish heraldry.",
+    details:{ Origin:"County Clare, Ireland", Material:"Resin & hand-painted finish", Size:'8" × 10"', Lead_Time:"7–10 business days" }},
+  { id:4, name:"Barry's Gold Blend Tea (80s)", category:"Food & Drink", price:14, was:null, emoji:"🍵", bg:"#fce4ec", badge:null,
+    desc:"Ireland's favourite tea, as brewed in kitchens from Cork to Donegal. Rich, malty, and deeply satisfying.",
+    details:{ Origin:"Cork, Ireland", Contents:"80 tea bags", Weight:"250g", Blend:"Assam & Kenyan" }},
+  { id:5, name:"Celtic Knot Pendant — Gold", category:"Jewelry", price:85, was:99, emoji:"✨", bg:"#e0f7fa", badge:"Sale",
+    desc:"Intricate Celtic knotwork pendant in 9ct gold. A piece that carries centuries of Irish symbolism.",
+    details:{ Origin:"Dublin, Ireland", Material:"9ct Yellow Gold", Chain:"18-inch gold chain included", Hallmark:"Dublin Assay Office" }},
+  { id:6, name:"Waterford Crystal Shamrock", category:"Gifts & Collectibles", price:55, was:null, emoji:"🔮", bg:"#e8f5e9", badge:"Collector",
+    desc:"Genuine Waterford Crystal shamrock ornament. A treasured gift for any occasion.",
+    details:{ Origin:"Waterford, Ireland", Material:"Full lead crystal", Height:'4"', "Est. Founded":"1783" }},
+  { id:7, name:"Aran Wool Cap — Fisherman", category:"Clothing & Knitwear", price:45, was:null, emoji:"🧢", bg:"#fff8e1", badge:null,
+    desc:"Traditional fisherman's cap knitted from natural undyed wool. Warm, water-resistant, and unmistakably Irish.",
+    details:{ Origin:"Aran Islands, Ireland", Material:"Natural undyed Aran wool", Sizes:"S/M, L/XL", Care:"Spot clean only" }},
+  { id:8, name:"Irish Whiskey Christmas Cake", category:"Food & Drink", price:38, was:null, emoji:"🎂", bg:"#fce4ec", badge:"Seasonal",
+    desc:"Rich fruit cake steeped in Irish whiskey. Baked to a traditional recipe and shipped in a keepsake tin.",
+    details:{ Origin:"County Tipperary, Ireland", Weight:"900g", Whiskey:"Aged Irish pot still", Shelf_Life:"3 months" }},
+];
+
+// ── CART STATE ──
+let cart = []; // [{id, name, price, emoji, qty}]
+
+function getCartTotal() {
+  return cart.reduce((s,i) => s + i.price * i.qty, 0);
+}
+function getCartCount() {
+  return cart.reduce((s,i) => s + i.qty, 0);
+}
+function updateCartBadge() {
+  document.getElementById('cartCount').textContent = getCartCount();
+}
+
+// ── ADD TO CART ──
+function addToCart(id, qty=1) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  const existing = cart.find(i => i.id === id);
+  if (existing) { existing.qty += qty; }
+  else { cart.push({ id:p.id, name:p.name, price:p.price, emoji:p.emoji, qty }); }
+  updateCartBadge();
+  renderCart();
+  showToast(`☘ "${p.name}" added to cart!`);
+}
+
+// ── RENDER CART ──
+function renderCart() {
+  const el = document.getElementById('cartItems');
+  const footer = document.getElementById('cartFooter');
+  if (cart.length === 0) {
+    el.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div><p>Your cart is empty.<br/>Browse our Irish goods above!</p></div>`;
+    footer.style.display = 'none';
+    return;
+  }
+  footer.style.display = 'block';
+  el.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="ci-emoji">${item.emoji}</div>
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-price">$${item.price.toFixed(2)}</div>
+        <div class="ci-qty">
+          <button onclick="changeQty(${item.id},-1)">−</button>
+          <span>${item.qty}</span>
+          <button onclick="changeQty(${item.id},1)">+</button>
+        </div>
+      </div>
+      <button class="ci-remove" onclick="removeFromCart(${item.id})" title="Remove">✕</button>
+    </div>
+  `).join('');
+  const subtotal = getCartTotal();
+  const shipping = subtotal >= 75 ? 0 : 8.95;
+  document.getElementById('cartSubtotal').textContent = '$' + subtotal.toFixed(2);
+  document.getElementById('cartShipping').textContent = shipping === 0 ? 'Free ☘' : '$' + shipping.toFixed(2);
+  document.getElementById('cartTotal').textContent = '$' + (subtotal + shipping).toFixed(2);
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  updateCartBadge();
+  renderCart();
+}
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  updateCartBadge();
+  renderCart();
+}
+
+// ── CART OPEN/CLOSE ──
+document.getElementById('cartBtn').onclick = () => {
+  document.getElementById('cartOverlay').classList.add('open');
+  renderCart();
+};
+function closeCart() { document.getElementById('cartOverlay').classList.remove('open'); }
+function closeCartOnOverlay(e) { if (e.target === document.getElementById('cartOverlay')) closeCart(); }
+
+// ── RENDER PRODUCTS ──
+let currentFilter = null;
+
+function renderProducts(filter=null) {
+  const grid = document.getElementById('productGrid');
+  let list = filter ? products.filter(p => p.category === filter) : products;
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (query) list = products.filter(p =>
+    p.name.toLowerCase().includes(query) ||
+    p.category.toLowerCase().includes(query) ||
+    p.desc.toLowerCase().includes(query)
+  );
+  document.getElementById('productsEyebrow').textContent = filter ? `☘ ${filter}` : (query ? `☘ Search results` : '☘ Handpicked');
+  document.getElementById('productsTitle').textContent = filter ? filter : (query ? `"${query}"` : 'Featured Products');
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="no-results">No products found. <a href="#" onclick="resetFilter();return false;" style="color:var(--green-deep)">View all</a></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(p => `
+    <div class="product-card" onclick="openModal(${p.id})">
+      <div class="product-img" style="background:${p.bg}">
+        <span>${p.emoji}</span>
+        ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
+      </div>
+      <div class="product-body">
+        <div class="product-category">${p.category}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="product-footer">
+          <div class="product-price">$${p.price}${p.was ? `<span class="was">$${p.was}</span>` : ''}</div>
+          <button class="btn-add" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterByCategory(cat) {
+  currentFilter = cat;
+  document.getElementById('searchInput').value = '';
+  renderProducts(cat);
+  document.getElementById('featured').scrollIntoView({behavior:'smooth'});
+}
+function resetFilter() {
+  currentFilter = null;
+  document.getElementById('searchInput').value = '';
+  renderProducts();
+}
+
+// ── SEARCH ──
+const searchInput = document.getElementById('searchInput');
+const searchDropdown = document.getElementById('searchDropdown');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) { searchDropdown.classList.remove('open'); return; }
+  const results = products.filter(p =>
+    p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+  );
+  if (results.length === 0) {
+    searchDropdown.innerHTML = '<div class="search-no-results">No products found</div>';
+  } else {
+    searchDropdown.innerHTML = results.map(p => `
+      <div class="search-result-item" onclick="selectSearchResult(${p.id})">
+        <div class="sri-emoji">${p.emoji}</div>
+        <div class="sri-info"><div class="sri-name">${p.name}</div><div class="sri-cat">${p.category}</div></div>
+        <div class="sri-price">$${p.price}</div>
+      </div>
+    `).join('');
+  }
+  searchDropdown.classList.add('open');
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    searchDropdown.classList.remove('open');
+    currentFilter = null;
+    renderProducts();
+    document.getElementById('featured').scrollIntoView({behavior:'smooth'});
+  }
+  if (e.key === 'Escape') { searchDropdown.classList.remove('open'); searchInput.value = ''; renderProducts(); }
+});
+
+function selectSearchResult(id) {
+  searchDropdown.classList.remove('open');
+  searchInput.value = '';
+  openModal(id);
+}
+
+document.addEventListener('click', e => {
+  if (!document.querySelector('.nav-search').contains(e.target)) {
+    searchDropdown.classList.remove('open');
+  }
+});
+
+// ── PRODUCT MODAL ──
+let modalQty = 1;
+
+function openModal(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  modalQty = 1;
+  document.getElementById('modalImg').innerHTML = `
+    <div style="width:100%;height:100%;background:${p.bg};display:flex;align-items:center;justify-content:center;font-size:6rem">
+      ${p.emoji}
+    </div>
+    ${p.badge ? `<div class="modal-badge">${p.badge}</div>` : ''}
+  `;
+  document.getElementById('modalImg').style.position = 'relative';
+  const detailsHtml = Object.entries(p.details).map(([k,v]) =>
+    `<strong>${k.replace(/_/g,' ')}:</strong> ${v}`
+  ).join(' &nbsp;·&nbsp; ');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="product-category">${p.category}</div>
+    <div class="modal-title">${p.name}</div>
+    <div class="modal-price">$${p.price}${p.was ? `<span class="was">$${p.was}</span>` : ''}</div>
+    <div class="modal-desc">${p.desc}</div>
+    <div class="modal-details">${detailsHtml}</div>
+    <div class="modal-qty">
+      <label>Qty</label>
+      <div class="qty-ctrl">
+        <button onclick="adjustModalQty(-1)">−</button>
+        <span id="modalQtyDisplay">1</span>
+        <button onclick="adjustModalQty(1)">+</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-add" onclick="addToCart(${p.id}, modalQty)">Add to Cart</button>
+      <button class="btn-modal-buy" onclick="addToCart(${p.id}, modalQty); closeModalBtn(); document.getElementById('cartOverlay').classList.add('open'); renderCart();">Buy Now</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function adjustModalQty(delta) {
+  modalQty = Math.max(1, modalQty + delta);
+  document.getElementById('modalQtyDisplay').textContent = modalQty;
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalBtn();
+}
+function closeModalBtn() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── SQUARE CHECKOUT ──
+// IMPORTANT: Replace 'sandbox-sq0idb-REPLACE_ME' with your actual Square Application ID
+// Get yours at https://developer.squareup.com/apps
+// For sandbox testing: use 'sandbox-sq0idb-...' and card number 4111 1111 1111 1111
+const SQUARE_APP_ID = 'sandbox-sq0idb-REPLACE_WITH_YOUR_APP_ID';
+const SQUARE_LOCATION_ID = 'REPLACE_WITH_YOUR_LOCATION_ID';
+
+let squareCard = null;
+let squarePayments = null;
+
+async function initSquareCheckout() {
+  if (cart.length === 0) return;
+  const form = document.getElementById('square-payment-form');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+
+  if (form.classList.contains('visible')) return; // already open
+
+  // Check if real credentials are set
+  if (SQUARE_APP_ID.includes('REPLACE_ME') || SQUARE_APP_ID.includes('REPLACE_WITH')) {
+    showToast('⚠️ Add your Square App ID to enable real payments');
+    document.getElementById('payment-status').textContent =
+      '👆 Replace SQUARE_APP_ID & SQUARE_LOCATION_ID in the script to go live.';
+    form.classList.add('visible');
+    checkoutBtn.style.display = 'none';
+    return;
+  }
+
+  try {
+    checkoutBtn.textContent = 'Loading payment form…';
+    checkoutBtn.disabled = true;
+    squarePayments = Square.payments(SQUARE_APP_ID, SQUARE_LOCATION_ID);
+    squareCard = await squarePayments.card();
+    await squareCard.attach('#card-container');
+    form.classList.add('visible');
+    checkoutBtn.style.display = 'none';
+    document.getElementById('payment-status').textContent = 'Enter your card details above.';
+  } catch (err) {
+    checkoutBtn.textContent = 'Proceed to Checkout';
+    checkoutBtn.disabled = false;
+    document.getElementById('payment-status').textContent = 'Could not load payment form. Check your App ID.';
+    console.error('Square init error:', err);
+  }
+}
+
+async function handlePayment() {
+  if (!squareCard) return;
+  const statusEl = document.getElementById('payment-status');
+  statusEl.textContent = 'Processing…';
+  try {
+    const result = await squareCard.tokenize();
+    if (result.status === 'OK') {
+      const token = result.token;
+      const total = Math.round((getCartTotal() + (getCartTotal() >= 75 ? 0 : 8.95)) * 100);
+      // ── Send token + total to YOUR backend to call Square Payments API ──
+      // Example: fetch('/api/square-pay', { method:'POST', body: JSON.stringify({token, total}) })
+      // For now we simulate success:
+      statusEl.textContent = '✅ Payment successful! Order confirmed. ☘';
+      cart = [];
+      updateCartBadge();
+      renderCart();
+      showToast('✅ Order placed! Thanks for shopping Irish.');
+      setTimeout(() => {
+        document.getElementById('square-payment-form').classList.remove('visible');
+        document.getElementById('checkoutBtn').style.display = 'block';
+        document.getElementById('checkoutBtn').textContent = 'Proceed to Checkout';
+        document.getElementById('checkoutBtn').disabled = false;
+        statusEl.textContent = '';
+        closeCart();
+      }, 2500);
+    } else {
+      statusEl.textContent = '❌ ' + (result.errors?.[0]?.message || 'Payment failed. Please try again.');
+    }
+  } catch (err) {
+    statusEl.textContent = '❌ Payment error. Please try again.';
+    console.error(err);
+  }
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ── INIT ──
+renderProducts();
+renderCart();
+</script>
+</body>
+</html>
